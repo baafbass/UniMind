@@ -1,3 +1,5 @@
 /ML/env
 /ML/anaconda_projects
 /server/venv
+/server/.env
+/server/serviceAccountKey.json

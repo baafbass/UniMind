@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 SERVICE_ACCOUNT = os.getenv("SERVICE_ACCOUNT_PATH", "serviceAccountKey.json")
-MODEL_PATH = os.getenv("MODEL_PATH", "model/model.joblib")
+MODEL_PATH = os.getenv("MODEL_PATH", "model/student_depression_model.joblib")
 
 cred = credentials.Certificate(SERVICE_ACCOUNT)
 firebase_admin.initialize_app(cred)
@@ -44,12 +44,17 @@ def predict():
     # örnek varsayılan feature sırasi: [sleep_hours, study_hours, gpa, stress_level, physical_activity]
     try:
         features = [
+            data.get("Extracurricular_Hours_Per_Day",0),
+            data.get("Social_Hours_Per_Day",0),
+            data.get("Physical_Activity_Hours_Per_Day",0),
             data.get("sleep_hours", 0),
             data.get("study_hours", 0),
-            data.get("gpa", 0),
-            data.get("stress_level", 0),
-            data.get("physical_activity", 0)
+            data.get("GPA", 0),
+            data.get("Academic Pressure",0),
+            data.get("Financial Stress",0),
+            data.get("Stress_level", 0)
         ]
+        print('features',features)
         arr = np.array(features).reshape(1, -1)
         proba = model.predict_proba(arr)[0]  # [prob_neg, prob_pos] örnek
         pred = int(model.predict(arr)[0])
