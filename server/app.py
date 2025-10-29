@@ -36,9 +36,9 @@ def verify_token_from_header(headers):
 
 @app.route("/api/predict", methods=["POST"])
 def predict():
-    user = verify_token_from_header(request.headers)
-    if user is None:
-        return jsonify({"error": "Unauthenticated"}), 401
+    # user = verify_token_from_header(request.headers)
+    # if user is None:
+    #     return jsonify({"error": "Unauthenticated"}), 401
 
     data = request.get_json()
     # örnek varsayılan feature sırasi: [sleep_hours, study_hours, gpa, stress_level, physical_activity]
@@ -54,7 +54,6 @@ def predict():
             data.get("Financial Stress",0),
             data.get("Stress_level", 0)
         ]
-        print('features',features)
         arr = np.array(features).reshape(1, -1)
         proba = model.predict_proba(arr)[0]  # [prob_neg, prob_pos] örnek
         pred = int(model.predict(arr)[0])

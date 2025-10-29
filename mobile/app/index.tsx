@@ -22,7 +22,7 @@ export default function UniMindApp() {
 
   const handleSurveyComplete = async (formData: any) => {
   try {
-    const response = await fetch('http://10.116.128.70:5000/predict', {
+    const response = await fetch('http://192.168.1.115:5000/predict', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -31,8 +31,8 @@ export default function UniMindApp() {
         Extracurricular_Hours_Per_Day: formData.extracurricular_hours,
         Social_Hours_Per_Day: formData.social_hours,
         Physical_Activity_Hours_Per_Day: formData.physical_activity_hours,
-        Sleep_Hours: formData.sleep_hours,
-        Study_Hours: formData.study_hours,
+        sleep_hours: formData.sleep_hours,
+        study_hours: formData.study_hours,
         Academic_Pressure: formData.academic_pressure,
         Financial_Stress: formData.financial_stress,
         Stress_Level: formData.stress_level,
