@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import UniMindLogo from '../../components/UniMindLogo';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../../services/firebase';
 
 interface LoginScreenProps {
   onNavigate: (screen: string) => void;
@@ -11,6 +14,7 @@ interface LoginScreenProps {
 
 export default function LoginScreen({ onNavigate, onLogin }: LoginScreenProps) {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -18,9 +22,116 @@ export default function LoginScreen({ onNavigate, onLogin }: LoginScreenProps) {
     studentId: ''
   });
 
+  const validateForm = () => {
+    if (!formData.email || !formData.password) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return false;
+    }
+    if (isSignUp && (!formData.name || !formData.studentId)) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return false;
+    }
+    if (formData.password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSignUp = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      // Create user account
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+
+      // Update profile with display name
+      await updateProfile(userCredential.user, {
+        displayName: formData.name
+      });
+
+      // Store additional user data in Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        name: formData.name,
+        email: formData.email,
+        studentId: formData.studentId,
+        createdAt: new Date().toISOString(),
+        assessmentHistory: []
+      });
+
+      const userData = {
+        uid: userCredential.user.uid,
+        name: formData.name,
+        email: formData.email,
+        studentId: formData.studentId
+      };
+
+      onLogin(userData);
+      Alert.alert('Success', 'Account created successfully!');
+      onNavigate('welcome');
+    } catch (error: any) {
+      let errorMessage = 'An error occurred during sign up';
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email is already registered';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'Password is too weak';
+      }
+      Alert.alert('Sign Up Error', errorMessage);
+      console.error('Sign up error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignIn = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+
+      const userData = {
+        uid: userCredential.user.uid,
+        name: userCredential.user.displayName || 'Student',
+        email: userCredential.user.email
+      };
+
+      onLogin(userData);
+      Alert.alert('Success', 'Logged in successfully!');
+      onNavigate('welcome');
+    } catch (error: any) {
+      let errorMessage = 'Invalid email or password';
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = 'No account found with this email';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Incorrect password';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address';
+      }
+      Alert.alert('Login Error', errorMessage);
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = () => {
-    onLogin({ name: formData.name || 'Student', email: formData.email });
-    onNavigate('welcome');
+    if (isSignUp) {
+      handleSignUp();
+    } else {
+      handleSignIn();
+    }
   };
 
   return (
@@ -60,6 +171,7 @@ export default function LoginScreen({ onNavigate, onLogin }: LoginScreenProps) {
                       value={formData.name}
                       onChangeText={(text) => setFormData({ ...formData, name: text })}
                       placeholderTextColor="#9ca3af"
+                      editable={!loading}
                     />
                   </View>
 
@@ -71,6 +183,7 @@ export default function LoginScreen({ onNavigate, onLogin }: LoginScreenProps) {
                       value={formData.studentId}
                       onChangeText={(text) => setFormData({ ...formData, studentId: text })}
                       placeholderTextColor="#9ca3af"
+                      editable={!loading}
                     />
                   </View>
                 </>
@@ -86,6 +199,7 @@ export default function LoginScreen({ onNavigate, onLogin }: LoginScreenProps) {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   placeholderTextColor="#9ca3af"
+                  editable={!loading}
                 />
               </View>
 
@@ -98,21 +212,23 @@ export default function LoginScreen({ onNavigate, onLogin }: LoginScreenProps) {
                   onChangeText={(text) => setFormData({ ...formData, password: text })}
                   secureTextEntry
                   placeholderTextColor="#9ca3af"
+                  editable={!loading}
                 />
               </View>
 
               <TouchableOpacity
                 onPress={handleSubmit}
                 style={styles.submitButton}
+                disabled={loading}
               >
                 <LinearGradient
-                  colors={['#9333ea', '#3b82f6']}
+                  colors={loading ? ['#d1d5db', '#9ca3af'] : ['#9333ea', '#3b82f6']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.gradientButton}
                 >
                   <Text style={styles.buttonText}>
-                    {isSignUp ? 'Create Account' : 'Sign In'}
+                    {loading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -120,6 +236,7 @@ export default function LoginScreen({ onNavigate, onLogin }: LoginScreenProps) {
               <TouchableOpacity
                 onPress={() => setIsSignUp(!isSignUp)}
                 style={styles.toggleButton}
+                disabled={loading}
               >
                 <Text style={styles.toggleText}>
                   {isSignUp
@@ -146,16 +263,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 24,
+    flexGrow: 1,
+    padding: 20,
   },
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 16,
-    marginBottom: 32,
+    marginBottom: 20,
   },
   backText: {
+    marginLeft: 8,
     fontSize: 16,
     color: '#4b5563',
   },
@@ -164,51 +281,44 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#4b5563',
-    marginTop: 16,
+    fontSize: 20,
+    color: '#374151',
+    marginTop: 12,
   },
   formCard: {
     backgroundColor: 'white',
-    borderRadius: 24,
-    padding: 32,
+    borderRadius: 16,
+    padding: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   inputGroup: {
     marginBottom: 20,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#374151',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: 'white',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#e5e7eb',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
     color: '#1f2937',
   },
   submitButton: {
-    marginTop: 4,
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 5,
+    marginTop: 8,
+    marginBottom: 16,
   },
   gradientButton: {
-    paddingVertical: 16,
+    paddingVertical: 14,
+    borderRadius: 8,
     alignItems: 'center',
   },
   buttonText: {
@@ -217,12 +327,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   toggleButton: {
-    marginTop: 24,
     alignItems: 'center',
+    padding: 8,
   },
   toggleText: {
-    color: '#9333ea',
+    color: '#6b7280',
     fontSize: 14,
-    fontWeight: '500',
   },
 });

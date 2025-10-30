@@ -1,28 +1,100 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
-import { Home, AlertCircle, CheckCircle } from 'lucide-react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import UniMindLogo from '../components/UniMindLogo';
+import { AlertCircle, CheckCircle, TrendingUp, Heart, Phone, MessageCircle, ArrowLeft } from 'lucide-react-native';
 
 interface ResultsScreenProps {
   onNavigate: (screen: string) => void;
-  result: any;
+  result: {
+    prediction: number;
+    probabilityPositive: number;
+    probabilityNegative: number;
+    riskLevel: string;
+    formData?: any;
+  } | null;
 }
 
 export default function ResultsScreen({ onNavigate, result }: ResultsScreenProps) {
-  const isDepressed = result?.prediction === 'Depressed';
+  if (!result) {
+    return (
+      <View style={styles.container}>
+        <Text>No results available</Text>
+      </View>
+    );
+  }
 
-  const recommendations = isDepressed ? [
-    { title: 'Speak with a counselor', description: 'Professional support can make a significant difference' },
-    { title: 'Maintain sleep schedule', description: 'Aim for 7-9 hours of quality sleep' },
-    { title: 'Stay physically active', description: 'Regular exercise helps improve mood' },
-    { title: 'Connect with others', description: 'Social support is crucial for mental health' }
-  ] : [
-    { title: 'Keep up healthy habits', description: 'Continue your current wellness practices' },
-    { title: 'Stay balanced', description: 'Maintain work-life balance in your routine' },
-    { title: 'Check in regularly', description: 'Monitor your mental health periodically' },
-    { title: 'Support others', description: 'Help friends who might be struggling' }
-  ];
+  const { riskLevel, probabilityPositive } = result;
+  const percentage = (probabilityPositive * 100).toFixed(1);
+
+  const getRiskColor = () => {
+    switch (riskLevel) {
+      case 'Low': return '#10b981';
+      case 'Moderate': return '#f59e0b';
+      case 'High': return '#ef4444';
+      case 'Very High': return '#dc2626';
+      default: return '#6b7280';
+    }
+  };
+
+  const getRiskIcon = () => {
+    if (riskLevel === 'Low') {
+      return <CheckCircle size={48} color="#10b981" />;
+    }
+    return <AlertCircle size={48} color={getRiskColor()} />;
+  };
+
+  const getRecommendations = () => {
+    if (riskLevel === 'Low') {
+      return [
+        'Continue maintaining your healthy habits',
+        'Keep up with regular sleep schedule',
+        'Stay connected with friends and family',
+        'Continue physical activities',
+      ];
+    } else if (riskLevel === 'Moderate') {
+      return [
+        'Consider speaking with a counselor',
+        'Practice stress management techniques',
+        'Maintain regular sleep schedule (7-9 hours)',
+        'Engage in regular physical activity',
+        'Connect with supportive friends',
+      ];
+    } else {
+      return [
+        'Please reach out to a mental health professional',
+        'Contact your university counseling center',
+        'Talk to someone you trust about how you\'re feeling',
+        'Consider crisis support resources',
+        'Practice self-care and prioritize rest',
+      ];
+    }
+  };
+
+  const getCrisisResources = () => {
+    return [
+      {
+        name: 'National Suicide Prevention Lifeline',
+        phone: '988',
+        description: '24/7 crisis support',
+        icon: Phone
+      },
+      {
+        name: 'Crisis Text Line',
+        phone: 'Text HOME to 741741',
+        description: 'Free 24/7 text support',
+        icon: MessageCircle
+      },
+      {
+        name: 'University Counseling Center',
+        phone: 'Contact your university',
+        description: 'Free counseling for students',
+        icon: Heart
+      }
+    ];
+  };
+
+  const percentageNumber = Math.max(0, Math.min(100, Number((probabilityPositive * 100).toFixed(1))));
+  const percentageText = `${percentageNumber.toFixed(1)}%`;
 
   return (
     <LinearGradient
@@ -30,105 +102,133 @@ export default function ResultsScreen({ onNavigate, result }: ResultsScreenProps
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView style={styles.scrollView}>
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
               onPress={() => onNavigate('welcome')}
-              style={styles.homeButton}
+              style={styles.backButton}
             >
-              <Home size={20} color="#374151" />
+              <ArrowLeft size={20} color="#374151" />
+              <Text style={styles.backText}>Home</Text>
             </TouchableOpacity>
-            <UniMindLogo size="sm" />
           </View>
 
-          {/* Result Card */}
-          <LinearGradient
-            colors={isDepressed ? ['#fff7ed', '#fef2f2'] : ['#f0fdf4', '#ecfdf5']}
-            style={styles.resultCard}
-          >
-            <View style={styles.resultHeader}>
+          {/* Results Card */}
+          <View style={styles.resultCard}>
+            <View style={styles.iconContainer}>
+              {getRiskIcon()}
+            </View>
+
+            <Text style={styles.title}>Assessment Results</Text>
+            
+            <View style={[styles.riskBadge, { backgroundColor: getRiskColor() }]}>
+              <Text style={styles.riskText}>{riskLevel} Risk</Text>
+            </View>
+
+            <View style={styles.percentageContainer}>
+              <Text style={styles.percentageLabel}>Depression Risk Score</Text>
+              <Text style={[styles.percentage, { color: getRiskColor() }]}>
+                {percentage}%
+              </Text>
+            </View>
+
+            {/*<View style={styles.progressBar}>
               <View
                 style={[
-                  styles.iconCircle,
-                  { backgroundColor: isDepressed ? '#fed7aa' : '#bbf7d0' }
+                  styles.progressFill,
+                  {
+                    width: `${percentage}%`,
+                    backgroundColor: getRiskColor()
+                  }
                 ]}
-              >
-                {isDepressed ? (
-                  <AlertCircle size={40} color="#ea580c" />
-                ) : (
-                  <CheckCircle size={40} color="#16a34a" />
-                )}
-              </View>
-              <Text style={styles.resultTitle}>Assessment Complete</Text>
-              <Text
-                style={[
-                  styles.resultSubtitle,
-                  { color: isDepressed ? '#c2410c' : '#15803d' }
-                ]}
-              >
-                {isDepressed ? 'Signs of Depression Detected' : 'No Depression Indicators'}
-              </Text>
-            </View>
+              />
+            </View>*/}
+          </View>
 
-            <View style={styles.messageBox}>
-              <Text style={styles.messageText}>
-                {isDepressed
-                  ? 'Based on your responses, you may be experiencing symptoms of depression. This is a common challenge many students face, and support is available.'
-                  : 'Based on your responses, you appear to be managing well. Continue maintaining healthy habits and stay mindful of your mental health.'}
-              </Text>
-            </View>
-
-            {isDepressed && (
-              <View style={styles.warningBox}>
-                <Text style={styles.warningText}>
-                  <Text style={styles.warningBold}>Important:</Text> This assessment is not a diagnosis. Please consult with a mental health professional for proper evaluation and support.
-                </Text>
-              </View>
-            )}
-          </LinearGradient>
+          {/* Interpretation */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>What This Means</Text>
+            <Text style={styles.cardText}>
+              {riskLevel === 'Low' && 
+                'Your responses suggest a low risk of depression. Continue maintaining your healthy lifestyle and positive habits.'
+              }
+              {riskLevel === 'Moderate' && 
+                'Your responses indicate moderate risk factors. Consider implementing stress management strategies and reaching out for support if needed.'
+              }
+              {(riskLevel === 'High' || riskLevel === 'Very High') && 
+                'Your responses suggest significant risk factors that warrant attention. Please consider reaching out to a mental health professional for support.'
+              }
+            </Text>
+          </View>
 
           {/* Recommendations */}
-          <View style={styles.recommendationsCard}>
-            <Text style={styles.recommendationsTitle}>Recommendations for You</Text>
-            <View style={styles.recommendationsList}>
-              {recommendations.map((rec, idx) => (
-                <View key={idx} style={styles.recommendationItem}>
-                  <View style={styles.recommendationNumber}>
-                    <Text style={styles.recommendationNumberText}>{idx + 1}</Text>
-                  </View>
-                  <View style={styles.recommendationContent}>
-                    <Text style={styles.recommendationItemTitle}>{rec.title}</Text>
-                    <Text style={styles.recommendationItemDescription}>{rec.description}</Text>
-                  </View>
-                </View>
-              ))}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <TrendingUp size={24} color="#9333ea" />
+              <Text style={styles.cardTitle}>Recommendations</Text>
             </View>
+            {getRecommendations().map((rec, index) => (
+              <View key={index} style={styles.recommendationItem}>
+                <View style={styles.bullet} />
+                <Text style={styles.recommendationText}>{rec}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Crisis Resources (if high risk) */}
+          {(riskLevel === 'High' || riskLevel === 'Very High') && (
+            <View style={[styles.card, styles.crisisCard]}>
+              <Text style={styles.crisisTitle}>Immediate Support Available</Text>
+              <Text style={styles.crisisSubtitle}>
+                If you're in crisis or need immediate help, these resources are available 24/7:
+              </Text>
+              
+              {getCrisisResources().map((resource, index) => {
+                const Icon = resource.icon;
+                return (
+                  <View key={index} style={styles.resourceItem}>
+                    <Icon size={20} color="#dc2626" />
+                    <View style={styles.resourceInfo}>
+                      <Text style={styles.resourceName}>{resource.name}</Text>
+                      <Text style={styles.resourcePhone}>{resource.phone}</Text>
+                      <Text style={styles.resourceDesc}>{resource.description}</Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+
+          {/* Disclaimer */}
+          <View style={styles.disclaimer}>
+            <AlertCircle size={16} color="#6b7280" />
+            <Text style={styles.disclaimerText}>
+              This assessment is not a diagnostic tool. Please consult with a qualified mental health professional for proper evaluation and treatment.
+            </Text>
           </View>
 
           {/* Action Buttons */}
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity
-              onPress={() => onNavigate('survey')}
-              style={styles.primaryButton}
+          <TouchableOpacity
+            onPress={() => onNavigate('survey')}
+            style={styles.button}
+          >
+            <LinearGradient
+              colors={['#9333ea', '#3b82f6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.gradientButton}
             >
-              <LinearGradient
-                colors={['#9333ea', '#3b82f6']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.gradientButton}
-              >
-                <Text style={styles.primaryButtonText}>Take Assessment Again</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+              <Text style={styles.buttonText}>Take Another Assessment</Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => onNavigate('welcome')}
-              style={styles.secondaryButton}
-            >
-              <Text style={styles.secondaryButtonText}>Return Home</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={() => onNavigate('profile')}
+            style={styles.secondaryButton}
+          >
+            <Text style={styles.secondaryButtonText}>View History</Text>
+          </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
@@ -142,174 +242,204 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  scrollContent: {
-    padding: 24,
+  scrollView: {
+    flex: 1,
+    padding: 20,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 32,
+    marginBottom: 20,
   },
-  homeButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'white',
-    justifyContent: 'center',
+  backButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+  },
+  backText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#374151',
+  },
+  resultCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
   },
-  resultCard: {
-    borderRadius: 24,
-    padding: 32,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  resultHeader: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+  iconContainer: {
     marginBottom: 16,
   },
-  resultTitle: {
-    fontSize: 28,
+  title: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#1f2937',
+    marginBottom: 12,
+  },
+  riskBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  riskText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  percentageContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  percentageLabel: {
+    fontSize: 14,
+    color: '#6b7280',
     marginBottom: 8,
   },
-  resultSubtitle: {
+  percentage: {
+    fontSize: 48,
+    fontWeight: 'bold',
+  },
+  progressBar: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  cardTitle: {
     fontSize: 18,
     fontWeight: '600',
-  },
-  messageBox: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 16,
-  },
-  messageText: {
-    fontSize: 16,
-    color: '#374151',
-    lineHeight: 24,
-  },
-  warningBox: {
-    backgroundColor: '#fed7aa',
-    borderWidth: 2,
-    borderColor: '#fdba74',
-    borderRadius: 16,
-    padding: 16,
-  },
-  warningText: {
-    fontSize: 14,
-    color: '#7c2d12',
-  },
-  warningBold: {
-    fontWeight: '600',
-  },
-  recommendationsCard: {
-    backgroundColor: 'white',
-    borderRadius: 24,
-    padding: 32,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  recommendationsTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 24,
+    marginLeft: 8,
   },
-  recommendationsList: {
-    gap: 16,
+  cardText: {
+    fontSize: 15,
+    color: '#4b5563',
+    lineHeight: 22,
   },
   recommendationItem: {
     flexDirection: 'row',
-    gap: 16,
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
-  recommendationNumber: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#ede9fe',
-    justifyContent: 'center',
-    alignItems: 'center',
+  bullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#9333ea',
+    marginRight: 12,
+    marginTop: 8,
   },
-  recommendationNumberText: {
-    fontSize: 14,
+  recommendationText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#4b5563',
+    lineHeight: 22,
+  },
+  crisisCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#dc2626',
+  },
+  crisisTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#9333ea',
+    color: '#dc2626',
+    marginBottom: 8,
   },
-  recommendationContent: {
+  crisisSubtitle: {
+    fontSize: 14,
+    color: '#4b5563',
+    marginBottom: 16,
+  },
+  resourceItem: {
+    flexDirection: 'row',
+    padding: 12,
+    backgroundColor: '#fef2f2',
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  resourceInfo: {
+    marginLeft: 12,
     flex: 1,
   },
-  recommendationItemTitle: {
+  resourceName: {
     fontSize: 16,
     fontWeight: '600',
     color: '#1f2937',
     marginBottom: 4,
   },
-  recommendationItemDescription: {
-    fontSize: 14,
-    color: '#4b5563',
-    lineHeight: 20,
+  resourcePhone: {
+    fontSize: 15,
+    color: '#dc2626',
+    fontWeight: '500',
+    marginBottom: 2,
   },
-  actionsContainer: {
-    gap: 12,
+  resourceDesc: {
+    fontSize: 13,
+    color: '#6b7280',
   },
-  primaryButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 5,
+  disclaimer: {
+    flexDirection: 'row',
+    padding: 16,
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  disclaimerText: {
+    flex: 1,
+    marginLeft: 12,
+    fontSize: 13,
+    color: '#6b7280',
+    lineHeight: 18,
+  },
+  button: {
+    marginBottom: 12,
   },
   gradientButton: {
     paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
   },
-  primaryButtonText: {
+  buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
   secondaryButton: {
-    backgroundColor: 'white',
-    borderRadius: 16,
     paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
     borderWidth: 2,
     borderColor: '#e5e7eb',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    marginBottom: 40,
   },
   secondaryButtonText: {
     color: '#374151',
     fontSize: 16,
     fontWeight: '600',
-    textAlign: 'center',
   },
 });
