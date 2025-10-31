@@ -45,8 +45,6 @@ export async function sendSurveyAndPredict(features:any) {
       }
     );
 
-    console.log('prediction',response.data)
-
     return response.data;
   } catch (error: any) {
     if (error.response) {
@@ -81,7 +79,6 @@ export async function saveAssessmentResult(userId: string, assessmentData: any) 
         },
       }
     );
-
     return response.data;
   } catch (error) {
     console.error('Error saving assessment:', error);

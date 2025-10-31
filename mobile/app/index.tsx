@@ -13,6 +13,7 @@ import { Alert } from 'react-native';
 
 // Main App Component
 export default function UniMindApp() {
+  
   const [currentScreen, setCurrentScreen] = useState('welcome');
   const [user, setUser] = useState<any>(null);
   const [assessmentResult, setAssessmentResult] = useState<any>(null);
@@ -26,7 +27,7 @@ export default function UniMindApp() {
         try {
           // Get user profile from Firestore
           const userProfile = await getUserProfile(firebaseUser.uid);
-          
+
           const userData = {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
@@ -34,7 +35,6 @@ export default function UniMindApp() {
             studentId: userProfile?.studentId || '',
             ...userProfile
           };
-          
           setUser(userData);
         } catch (error) {
           console.error('Error loading user profile:', error);
@@ -79,58 +79,64 @@ export default function UniMindApp() {
   };
 
   const handleSurveyComplete = async (formData: any) => {
-    if (!user) {
-      Alert.alert('Error', 'You must be logged in to take the assessment');
-      setCurrentScreen('login');
-      return;
-    }
+  if (!user) {
+    Alert.alert('Error', 'You must be logged in to take the assessment');
+    setCurrentScreen('login');
+    return;
+  }
 
-    setPredictionLoading(true);
+  setPredictionLoading(true);
+  try {
+    // 1) Get prediction from ML API
+    const result = await sendSurveyAndPredict(formData);
+    console.log('result', result);
+
+    // 2) Calculate risk level
+    const riskLevel = calculateRiskLevel(result.probability_positive);
+
+    // 3) Prepare assessment data
+    const assessmentData = {
+      prediction: result.prediction,
+      probabilityPositive: result.probability_positive,
+      probabilityNegative: result.probability_negative,
+      riskLevel,
+      formData,
+      timestamp: new Date().toISOString()
+    };
+
+    // 4) set result and navigate immediately (prevent stuck UI)
+    setAssessmentResult(assessmentData);
+    setCurrentScreen('results');
+
+    // 5) Turn off the spinner now — UI already updated
+    setPredictionLoading(false);
+
+    // 6) Save to Firestore in background (still awaited so you can see errors, but spinner is off)
     try {
-      // Get prediction from ML API
-      const result = await sendSurveyAndPredict(formData);
-
-      console.log('result',result)
-      
-      // Calculate risk level
-      const riskLevel = calculateRiskLevel(result.probability_positive);
-      
-      // Prepare assessment data
-      const assessmentData = {
-        prediction: result.prediction,
-        probabilityPositive: result.probability_positive,
-        probabilityNegative: result.probability_negative,
-        riskLevel,
-        formData,
-        timestamp: new Date().toISOString()
-      };
-
-      // Save to Firestore
-      try {
-        await saveAssessment(user.uid, assessmentData);
-      } catch (firestoreError) {
-        console.error('Firestore save error:', firestoreError);
-        // Continue even if Firestore save fails
-      }
-
-      // Set result and navigate
-      setAssessmentResult(assessmentData);
-      setCurrentScreen('results');
-      
-    } catch (error: any) {
-      console.error('Prediction error:', error);
-      Alert.alert(
-        'Error',
-        error.message || 'Failed to get prediction. Please check your connection and try again.',
-        [
-          { text: 'Retry', onPress: () => handleSurveyComplete(formData) },
-          { text: 'Cancel', style: 'cancel' }
-        ]
-      );
-    } finally {
-      setPredictionLoading(false);
+      await saveAssessment(user.uid, assessmentData);
+      console.log('Saved assessment to Firestore');
+    } catch (firestoreError) {
+      console.error('Firestore save error:', firestoreError);
+      // If you want, show user-friendly info but don't block them:
+      // Alert.alert('Warning', 'Failed to save assessment to cloud. It will be retried later.');
     }
-  };
+
+  } catch (error: any) {
+    console.error('Prediction error:', error);
+    // Ensure spinner disabled on error
+    setPredictionLoading(false);
+
+    Alert.alert(
+      'Error',
+      error.message || 'Failed to get prediction. Please check your connection and try again.',
+      [
+        { text: 'Retry', onPress: () => handleSurveyComplete(formData) },
+        { text: 'Cancel', style: 'cancel' }
+      ]
+    );
+  }
+};
+
 
   // Show loading screen while checking auth state
   if (loading) {

@@ -39,57 +39,78 @@ export default function LoginScreen({ onNavigate, onLogin }: LoginScreenProps) {
   };
 
   const handleSignUp = async () => {
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    setLoading(true);
-    try {
-      // Create user account
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
+  setLoading(true);
+  try {
+    // Create user account
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      formData.email,
+      formData.password
+    );
 
-      // Update profile with display name
-      await updateProfile(userCredential.user, {
-        displayName: formData.name
-      });
+    console.log('User created in Auth:', userCredential.user.uid);
 
-      // Store additional user data in Firestore
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
-        name: formData.name,
-        email: formData.email,
-        studentId: formData.studentId,
-        createdAt: new Date().toISOString(),
-        assessmentHistory: []
-      });
+    // Update profile with display name
+    await updateProfile(userCredential.user, {
+      displayName: formData.name
+    });
 
-      const userData = {
-        uid: userCredential.user.uid,
-        name: formData.name,
-        email: formData.email,
-        studentId: formData.studentId
-      };
+    console.log('Profile updated, now saving to Firestore...');
 
-      onLogin(userData);
-      Alert.alert('Success', 'Account created successfully!');
-      onNavigate('welcome');
-    } catch (error: any) {
-      let errorMessage = 'An error occurred during sign up';
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'This email is already registered';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Invalid email address';
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'Password is too weak';
-      }
-      Alert.alert('Sign Up Error', errorMessage);
-      console.error('Sign up error:', error);
-    } finally {
-      setLoading(false);
+    // Store additional user data in Firestore with timeout
+    const firestorePromise = setDoc(doc(db, 'users', userCredential.user.uid), {
+      name: formData.name,
+      email: formData.email,
+      studentId: formData.studentId,
+      createdAt: new Date().toISOString(),
+      assessmentHistory: []
+    });
+
+    // Add a timeout to prevent infinite hanging
+    await Promise.race([
+      firestorePromise,
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Firestore write timeout')), 15000)
+      )
+    ]);
+
+    console.log('Firestore data saved successfully!');
+
+    const userData = {
+      uid: userCredential.user.uid,
+      name: formData.name,
+      email: formData.email,
+      studentId: formData.studentId
+    };
+
+    onLogin(userData);
+    Alert.alert('Success', 'Account created successfully!');
+    onNavigate('welcome');
+  } catch (error: any) {
+    console.error('Full error object:', error);
+    
+    let errorMessage = 'An error occurred during sign up';
+    
+    if (error.message === 'Firestore write timeout') {
+      errorMessage = 'Connection timeout. Please check your internet and try again.';
+    } else if (error.code === 'auth/email-already-in-use') {
+      errorMessage = 'This email is already registered';
+    } else if (error.code === 'auth/invalid-email') {
+      errorMessage = 'Invalid email address';
+    } else if (error.code === 'auth/weak-password') {
+      errorMessage = 'Password is too weak';
+    } else if (error.code?.includes('firestore')) {
+      errorMessage = 'Database connection failed: ' + error.message;
     }
-  };
-
+    
+    Alert.alert('Sign Up Error', errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+  
   const handleSignIn = async () => {
     if (!validateForm()) return;
 

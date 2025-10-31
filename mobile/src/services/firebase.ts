@@ -1,26 +1,40 @@
 import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  initializeAuth, 
-  getReactNativePersistence // <-- Add this
+import {
+  getAuth,
+  initializeAuth,
+  getReactNativePersistence
 } from 'firebase/auth';
-import { getFirestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, query, where, orderBy, getDocs } from 'firebase/firestore';
+import {
+  initializeFirestore, // <- import this
+  collection,
+  addDoc,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  getDocs
+} from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-//api keys
-}
+ //api key's and configs
+};
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Auth with React Native persistence
+// Auth (same)
 export const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage)
 });
 
-// Initialize Firestore
-export const db = getFirestore(app);
+// Firestore: use initializeFirestore with RN-friendly flags
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+  useFetchStreams: false
+});
 
 // Firestore helper functions
 

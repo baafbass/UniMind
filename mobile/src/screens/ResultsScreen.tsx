@@ -93,8 +93,8 @@ export default function ResultsScreen({ onNavigate, result }: ResultsScreenProps
     ];
   };
 
-  const percentageNumber = Math.max(0, Math.min(100, Number((probabilityPositive * 100).toFixed(1))));
-  const percentageText = `${percentageNumber.toFixed(1)}%`;
+  // const percentageNumber = Math.max(0, Math.min(100, Number((probabilityPositive * 100).toFixed(1))));
+  // const percentageText = `${percentageNumber.toFixed(1)}%`;
 
   return (
     <LinearGradient
