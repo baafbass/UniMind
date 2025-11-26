@@ -20,7 +20,14 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
- //api key's and configs
+  apiKey: "AIzaSyD-KWveQ0NxKCG2GmKF0j9_lWSdvQQfm0w",
+  authDomain: "unimind-fe0df.firebaseapp.com",
+  databaseURL: "https://unimind-fe0df-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "unimind-fe0df",
+  storageBucket: "unimind-fe0df.firebasestorage.app",
+  messagingSenderId: "535389169381",
+  appId: "1:535389169381:web:59a961a1a752eba7f3960c",
+  measurementId: "G-YL5P7PC7BE"
 };
 
 const app = initializeApp(firebaseConfig);
