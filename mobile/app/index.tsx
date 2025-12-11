@@ -11,7 +11,7 @@ import { sendSurveyAndPredict } from '../src/services/api';
 import { saveAssessment, getUserProfile } from '../src/services/firebase';
 import { Alert } from 'react-native';
 
-// Main App Component
+
 export default function UniMindApp() {
   
   const [currentScreen, setCurrentScreen] = useState('welcome');
@@ -20,12 +20,11 @@ export default function UniMindApp() {
   const [loading, setLoading] = useState(true);
   const [predictionLoading, setPredictionLoading] = useState(false);
 
-  // Listen for authentication state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // Get user profile from Firestore
+
           const userProfile = await getUserProfile(firebaseUser.uid);
 
           const userData = {
@@ -38,7 +37,6 @@ export default function UniMindApp() {
           setUser(userData);
         } catch (error) {
           console.error('Error loading user profile:', error);
-          // Still set basic user data even if profile fetch fails
           setUser({
             uid: firebaseUser.uid,
             email: firebaseUser.email,
@@ -87,14 +85,11 @@ export default function UniMindApp() {
 
   setPredictionLoading(true);
   try {
-    // 1) Get prediction from ML API
-    const result = await sendSurveyAndPredict(formData);
-    console.log('result', result);
 
-    // 2) Calculate risk level
+    const result = await sendSurveyAndPredict(formData);
+
     const riskLevel = calculateRiskLevel(result.probability_positive);
 
-    // 3) Prepare assessment data
     const assessmentData = {
       prediction: result.prediction,
       probabilityPositive: result.probability_positive,
@@ -104,26 +99,20 @@ export default function UniMindApp() {
       timestamp: new Date().toISOString()
     };
 
-    // 4) set result and navigate immediately (prevent stuck UI)
     setAssessmentResult(assessmentData);
     setCurrentScreen('results');
 
-    // 5) Turn off the spinner now — UI already updated
     setPredictionLoading(false);
 
-    // 6) Save to Firestore in background (still awaited so you can see errors, but spinner is off)
     try {
       await saveAssessment(user.uid, assessmentData);
       console.log('Saved assessment to Firestore');
     } catch (firestoreError) {
       console.error('Firestore save error:', firestoreError);
-      // If you want, show user-friendly info but don't block them:
-      // Alert.alert('Warning', 'Failed to save assessment to cloud. It will be retried later.');
     }
 
   } catch (error: any) {
     console.error('Prediction error:', error);
-    // Ensure spinner disabled on error
     setPredictionLoading(false);
 
     Alert.alert(
@@ -138,7 +127,6 @@ export default function UniMindApp() {
 };
 
 
-  // Show loading screen while checking auth state
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#faf5ff' }}>
@@ -147,7 +135,6 @@ export default function UniMindApp() {
     );
   }
 
-  // Show prediction loading overlay
   if (predictionLoading) {
     const { Text: RNText } = require('react-native');
     return (

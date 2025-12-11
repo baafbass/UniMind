@@ -43,23 +43,17 @@ export default function LoginScreen({ onNavigate, onLogin }: LoginScreenProps) {
 
   setLoading(true);
   try {
-    // Create user account
+
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       formData.email,
       formData.password
     );
 
-    console.log('User created in Auth:', userCredential.user.uid);
-
-    // Update profile with display name
     await updateProfile(userCredential.user, {
       displayName: formData.name
     });
 
-    console.log('Profile updated, now saving to Firestore...');
-
-    // Store additional user data in Firestore with timeout
     const firestorePromise = setDoc(doc(db, 'users', userCredential.user.uid), {
       name: formData.name,
       email: formData.email,
@@ -68,15 +62,12 @@ export default function LoginScreen({ onNavigate, onLogin }: LoginScreenProps) {
       assessmentHistory: []
     });
 
-    // Add a timeout to prevent infinite hanging
     await Promise.race([
       firestorePromise,
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Firestore write timeout')), 15000)
       )
     ]);
-
-    console.log('Firestore data saved successfully!');
 
     const userData = {
       uid: userCredential.user.uid,

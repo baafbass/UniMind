@@ -93,9 +93,6 @@ export default function ResultsScreen({ onNavigate, result }: ResultsScreenProps
     ];
   };
 
-  // const percentageNumber = Math.max(0, Math.min(100, Number((probabilityPositive * 100).toFixed(1))));
-  // const percentageText = `${percentageNumber.toFixed(1)}%`;
-
   return (
     <LinearGradient
       colors={['#faf5ff', '#eff6ff', '#eef2ff']}
@@ -103,7 +100,6 @@ export default function ResultsScreen({ onNavigate, result }: ResultsScreenProps
     >
       <SafeAreaView style={styles.safeArea}>
         <ScrollView style={styles.scrollView}>
-          {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
               onPress={() => onNavigate('welcome')}
@@ -114,7 +110,6 @@ export default function ResultsScreen({ onNavigate, result }: ResultsScreenProps
             </TouchableOpacity>
           </View>
 
-          {/* Results Card */}
           <View style={styles.resultCard}>
             <View style={styles.iconContainer}>
               {getRiskIcon()}
@@ -132,21 +127,8 @@ export default function ResultsScreen({ onNavigate, result }: ResultsScreenProps
                 {percentage}%
               </Text>
             </View>
-
-            {/*<View style={styles.progressBar}>
-              <View
-                style={[
-                  styles.progressFill,
-                  {
-                    width: `${percentage}%`,
-                    backgroundColor: getRiskColor()
-                  }
-                ]}
-              />
-            </View>*/}
           </View>
 
-          {/* Interpretation */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>What This Means</Text>
             <Text style={styles.cardText}>
@@ -162,7 +144,6 @@ export default function ResultsScreen({ onNavigate, result }: ResultsScreenProps
             </Text>
           </View>
 
-          {/* Recommendations */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <TrendingUp size={24} color="#9333ea" />
@@ -176,7 +157,6 @@ export default function ResultsScreen({ onNavigate, result }: ResultsScreenProps
             ))}
           </View>
 
-          {/* Crisis Resources (if high risk) */}
           {(riskLevel === 'High' || riskLevel === 'Very High') && (
             <View style={[styles.card, styles.crisisCard]}>
               <Text style={styles.crisisTitle}>Immediate Support Available</Text>
@@ -200,7 +180,6 @@ export default function ResultsScreen({ onNavigate, result }: ResultsScreenProps
             </View>
           )}
 
-          {/* Disclaimer */}
           <View style={styles.disclaimer}>
             <AlertCircle size={16} color="#6b7280" />
             <Text style={styles.disclaimerText}>
@@ -208,7 +187,6 @@ export default function ResultsScreen({ onNavigate, result }: ResultsScreenProps
             </Text>
           </View>
 
-          {/* Action Buttons */}
           <TouchableOpacity
             onPress={() => onNavigate('survey')}
             style={styles.button}

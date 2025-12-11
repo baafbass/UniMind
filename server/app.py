@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
@@ -10,18 +9,14 @@ from dotenv import load_dotenv
 from datetime import datetime
 import logging
 
-# Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load environment variables
 load_dotenv()
 
-# Configuration
 SERVICE_ACCOUNT = os.getenv("SERVICE_ACCOUNT_PATH", "serviceAccountKey.json")
 MODEL_PATH = os.getenv("MODEL_PATH", "model/student_depression_model.joblib")
 
-# Initialize Firebase Admin
 try:
     cred = credentials.Certificate(SERVICE_ACCOUNT)
     firebase_admin.initialize_app(cred)
@@ -31,7 +26,6 @@ except Exception as e:
     logger.error(f"Firebase initialization error: {e}")
     raise
 
-# Load ML Model
 try:
     model = joblib.load(MODEL_PATH)
     logger.info(f"Model loaded successfully from {MODEL_PATH}")
@@ -43,7 +37,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 def verify_token_from_header(headers):
-    """Verify Firebase ID token from Authorization header"""
+
     auth_header = headers.get('Authorization', None)
     if not auth_header:
         return None
@@ -55,14 +49,14 @@ def verify_token_from_header(headers):
     
     try:
         decoded = fb_auth.verify_id_token(id_token)
-        return decoded  # contains uid, email, etc.
+        return decoded 
     except Exception as e:
         logger.error(f"Token verification failed: {e}")
         return None
 
 @app.route("/health", methods=["GET"])
 def health_check():
-    """Health check endpoint"""
+
     return jsonify({
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
@@ -71,8 +65,7 @@ def health_check():
 
 @app.route("/api/predict", methods=["POST"])
 def predict():
-    """Make prediction based on user input"""
-    # Verify authentication
+
     user = verify_token_from_header(request.headers)
     if user is None:
         return jsonify({"error": "Unauthenticated"}), 401
@@ -83,8 +76,6 @@ def predict():
         if not data:
             return jsonify({"error": "No data provided"}), 400
         
-        # Extract features in correct order
-        # Order should match your model training data
         features = [
             float(data.get("Extracurricular_Hours_Per_Day", 0)),
             float(data.get("Social_Hours_Per_Day", 0)),
@@ -97,16 +88,13 @@ def predict():
             float(data.get("Stress_Level", 0))
         ]
         
-        # Validate features
         if any(f < 0 for f in features):
             return jsonify({"error": "Invalid feature values"}), 400
         
-        # Make prediction
         arr = np.array(features).reshape(1, -1)
-        proba = model.predict_proba(arr)[0]  # [prob_negative, prob_positive]
+        proba = model.predict_proba(arr)[0]
         pred = int(model.predict(arr)[0])
         
-        # Calculate risk level
         risk_level = "Low"
         if proba[1] >= 0.7:
             risk_level = "Very High"
@@ -136,8 +124,7 @@ def predict():
 
 @app.route("/api/save-assessment", methods=["POST"])
 def save_assessment():
-    """Save assessment result to Firestore"""
-    # Verify authentication
+
     user = verify_token_from_header(request.headers)
     if user is None:
         return jsonify({"error": "Unauthenticated"}), 401
@@ -149,7 +136,6 @@ def save_assessment():
         if not user_id or user_id != user.get("uid"):
             return jsonify({"error": "Unauthorized"}), 403
         
-        # Save to Firestore
         assessment_ref = db.collection('assessments').add({
             "userId": user_id,
             "prediction": data.get("prediction"),
@@ -172,8 +158,7 @@ def save_assessment():
 
 @app.route("/api/assessments/<user_id>", methods=["GET"])
 def get_assessments(user_id):
-    """Get user's assessment history"""
-    # Verify authentication
+
     user = verify_token_from_header(request.headers)
     if user is None:
         return jsonify({"error": "Unauthenticated"}), 401
@@ -182,7 +167,7 @@ def get_assessments(user_id):
         return jsonify({"error": "Unauthorized"}), 403
     
     try:
-        # Query Firestore
+
         assessments_ref = db.collection('assessments')
         query = assessments_ref.where('userId', '==', user_id).order_by('timestamp', direction=firestore.Query.DESCENDING)
         
@@ -203,8 +188,7 @@ def get_assessments(user_id):
 
 @app.route("/api/user/<user_id>", methods=["GET"])
 def get_user_profile(user_id):
-    """Get user profile"""
-    # Verify authentication
+
     user = verify_token_from_header(request.headers)
     if user is None:
         return jsonify({"error": "Unauthenticated"}), 401

@@ -6,10 +6,9 @@ import Slider from '@react-native-community/slider';
 
 interface SurveyScreenProps {
   onNavigate: (screen: string) => void;
-  onComplete: (formData: FormDataState) => void; // Use the new type here
+  onComplete: (formData: FormDataState) => void;
 }
 
-// 1. Define a type for your form data
 type FormDataState = {
   extracurricular_hours: number;
   social_hours: number;
@@ -22,9 +21,8 @@ type FormDataState = {
   stress_level: number;
 };
 
-// 2. Define an interface for the question object
 interface Question {
-  id: keyof FormDataState; // This is the key fix!
+  id: keyof FormDataState; 
   title: string;
   description: string;
   icon: LucideIcon;
@@ -157,8 +155,7 @@ export default function SurveyScreen({ onNavigate, onComplete }: SurveyScreenPro
 
   const progress = ((step + 1) / questions.length) * 100;
 
-  // This will now correctly show "3.11" for GPA and "Moderate" for stress
-  const value = formData[currentQuestion.id]; // This line is now error-free
+  const value = formData[currentQuestion.id];
   let displayText: string | number;
 
   if (currentQuestion.id === 'gpa') {
@@ -168,7 +165,6 @@ export default function SurveyScreen({ onNavigate, onComplete }: SurveyScreenPro
   } else {
     displayText = value;
   }
-  // --- End of display logic ---
 
   return (
     <LinearGradient
@@ -177,7 +173,6 @@ export default function SurveyScreen({ onNavigate, onComplete }: SurveyScreenPro
     >
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
-          {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
               onPress={handleBack}
@@ -190,7 +185,6 @@ export default function SurveyScreen({ onNavigate, onComplete }: SurveyScreenPro
             </Text>
           </View>
 
-          {/* Progress Bar */}
           <View style={styles.progressBarContainer}>
             <View style={styles.progressBarBg}>
               <LinearGradient
@@ -203,7 +197,6 @@ export default function SurveyScreen({ onNavigate, onComplete }: SurveyScreenPro
           </View>
 
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-            {/* Question Card */}
             <View style={styles.questionCard}>
               <View style={styles.iconContainer}>
                 <Icon size={32} color="#9333ea" />
@@ -212,7 +205,6 @@ export default function SurveyScreen({ onNavigate, onComplete }: SurveyScreenPro
               <Text style={styles.questionTitle}>{currentQuestion.title}</Text>
               <Text style={styles.questionDescription}>{currentQuestion.description}</Text>
 
-              {/* Value Display */}
               <View style={styles.valueContainer}>
                 <Text style={styles.value}>{currentQuestion.id === 'gpa'? displayText = value.toFixed(2):formData[currentQuestion.id]}</Text>
                 {currentQuestion.unit && (
@@ -220,7 +212,6 @@ export default function SurveyScreen({ onNavigate, onComplete }: SurveyScreenPro
                 )}
               </View>
 
-              {/* Slider */}
               <Slider
                 style={styles.slider}
                 minimumValue={currentQuestion.min}
@@ -235,7 +226,6 @@ export default function SurveyScreen({ onNavigate, onComplete }: SurveyScreenPro
                 thumbTintColor="#9333ea"
               />
 
-              {/* Labels for rating scales */}
               {currentQuestion.labels && (
                 <View style={styles.labelsContainer}>
                   {currentQuestion.labels.map((label, idx) => (
@@ -248,7 +238,7 @@ export default function SurveyScreen({ onNavigate, onComplete }: SurveyScreenPro
             </View>
           </ScrollView>
 
-          {/* Next Button */}
+
           <TouchableOpacity
             onPress={handleNext}
             style={styles.nextButton}

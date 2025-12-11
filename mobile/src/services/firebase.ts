@@ -5,7 +5,7 @@ import {
   getReactNativePersistence
 } from 'firebase/auth';
 import {
-  initializeFirestore, // <- import this
+  initializeFirestore,
   collection,
   addDoc,
   doc,
@@ -20,32 +20,27 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD-KWveQ0NxKCG2GmKF0j9_lWSdvQQfm0w",
-  authDomain: "unimind-fe0df.firebaseapp.com",
-  databaseURL: "https://unimind-fe0df-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "unimind-fe0df",
-  storageBucket: "unimind-fe0df.firebasestorage.app",
-  messagingSenderId: "535389169381",
-  appId: "1:535389169381:web:59a961a1a752eba7f3960c",
-  measurementId: "G-YL5P7PC7BE"
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: "",
+  measurementId: ""
 };
 
 const app = initializeApp(firebaseConfig);
 
-// Auth (same)
 export const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage)
 });
 
-// Firestore: use initializeFirestore with RN-friendly flags
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
   useFetchStreams: false
 });
 
-// Firestore helper functions
-
-// Save user profile
 export const saveUserProfile = async (userId: string, userData: any) => {
   try {
     await setDoc(doc(db, 'users', userId), {
@@ -58,7 +53,6 @@ export const saveUserProfile = async (userId: string, userData: any) => {
   }
 };
 
-// Get user profile
 export const getUserProfile = async (userId: string) => {
   try {
     const docRef = doc(db, 'users', userId);
@@ -75,17 +69,14 @@ export const getUserProfile = async (userId: string) => {
   }
 };
 
-// Save assessment result
 export const saveAssessment = async (userId: string, assessmentData: any) => {
   try {
-    // Add to assessments collection
     const assessmentRef = await addDoc(collection(db, 'assessments'), {
       userId,
       ...assessmentData,
       timestamp: new Date().toISOString()
     });
 
-    // Update user's assessment history
     const userRef = doc(db, 'users', userId);
     const userDoc = await getDoc(userRef);
     
@@ -112,7 +103,6 @@ export const saveAssessment = async (userId: string, assessmentData: any) => {
   }
 };
 
-// Get user's assessment history
 export const getAssessmentHistory = async (userId: string) => {
   try {
     const q = query(
@@ -138,7 +128,6 @@ export const getAssessmentHistory = async (userId: string) => {
   }
 };
 
-// Get specific assessment
 export const getAssessment = async (assessmentId: string) => {
   try {
     const docRef = doc(db, 'assessments', assessmentId);

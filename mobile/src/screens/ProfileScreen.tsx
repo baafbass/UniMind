@@ -195,8 +195,6 @@ export default function ProfileScreen({ onNavigate, user, onLogout }: ProfileScr
                         {(assessment.probabilityPositive * 100).toFixed(0)}%
                       </Text>
                     </View>
-
-                    {/* Key Factors */}
                     {assessment.formData && (
                       <View style={styles.factorsContainer}>
                         <Text style={styles.factorsTitle}>Key Metrics:</Text>
@@ -234,7 +232,6 @@ export default function ProfileScreen({ onNavigate, user, onLogout }: ProfileScr
             )}
           </View>
 
-          {/* Stats Summary */}
           {assessments.length > 0 && (
             <View style={styles.statsCard}>
               <Text style={styles.statsTitle}>Summary</Text>

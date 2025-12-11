@@ -23,7 +23,6 @@ export default function WelcomeScreen({ onNavigate, user }: WelcomeScreenProps) 
     >
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Header */}
           <View style={styles.header}>
             <UniMindLogo size="md" />
             {user && (
@@ -36,7 +35,6 @@ export default function WelcomeScreen({ onNavigate, user }: WelcomeScreenProps) 
             )}
           </View>
 
-          {/* Hero Section */}
           <View style={styles.heroSection}>
             <View style={styles.iconWrapper}>
               <Brain size={80} color="#9333ea" />
@@ -47,7 +45,6 @@ export default function WelcomeScreen({ onNavigate, user }: WelcomeScreenProps) 
             </Text>
           </View>
 
-          {/* Features */}
           <View style={styles.featuresContainer}>
             {features.map((feature, idx) => (
               <View key={idx} style={styles.featureCard}>
@@ -59,7 +56,6 @@ export default function WelcomeScreen({ onNavigate, user }: WelcomeScreenProps) 
             ))}
           </View>
 
-          {/* CTA Buttons */}
           <View style={styles.ctaContainer}>
             {user ? (
               <TouchableOpacity

@@ -1,12 +1,11 @@
 import axios from 'axios';
 import { auth } from './firebase';
 
-// Update this with your actual backend URL
-const API_BASE = __DEV__ 
-  ? 'http://10.7.85.208:5000' // Development
-  : 'https://your-production-url.com'; // Production
 
-// Helper: Get Firebase ID token
+const API_BASE = __DEV__ 
+  ? 'http://192.168.1.104:5000'
+  : 'https://unimind.com';
+
 async function getIdToken(): Promise<string | null> {
   const user = auth.currentUser;
   if (!user) return null;
@@ -18,7 +17,6 @@ async function getIdToken(): Promise<string | null> {
   }
 }
 
-// Send survey data and get prediction
 export async function sendSurveyAndPredict(features:any) {
   try {
     const token = await getIdToken();
@@ -41,26 +39,22 @@ export async function sendSurveyAndPredict(features:any) {
           Authorization: token ? `Bearer ${token}` : '',
           'Content-Type': 'application/json',
         },
-        timeout: 10000, // 10 second timeout
+        timeout: 10000,
       }
     );
 
     return response.data;
   } catch (error: any) {
     if (error.response) {
-      // Server responded with error
       throw new Error(error.response.data.error || 'Server error occurred');
     } else if (error.request) {
-      // Request made but no response
       throw new Error('No response from server. Please check your connection.');
     } else {
-      // Other errors
       throw new Error('Failed to send request: ' + error.message);
     }
   }
 }
 
-// Save assessment result to backend
 export async function saveAssessmentResult(userId: string, assessmentData: any) {
   try {
     const token = await getIdToken();
@@ -86,7 +80,6 @@ export async function saveAssessmentResult(userId: string, assessmentData: any) 
   }
 }
 
-// Get user's assessment history
 export async function getAssessmentHistory(userId: string) {
   try {
     const token = await getIdToken();
@@ -107,7 +100,6 @@ export async function getAssessmentHistory(userId: string) {
   }
 }
 
-// Health check
 export async function checkAPIHealth() {
   try {
     const response = await axios.get(`${API_BASE}/health`, {
