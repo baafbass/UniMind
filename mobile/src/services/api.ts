@@ -3,7 +3,7 @@ import { auth } from './firebase';
 
 // Update this with your actual backend URL
 const API_BASE = __DEV__ 
-  ? 'http://10.116.128.70:5000' // Development
+  ? 'http://10.7.85.208:5000' // Development
   : 'https://your-production-url.com'; // Production
 
 // Helper: Get Firebase ID token
