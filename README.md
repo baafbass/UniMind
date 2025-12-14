@@ -241,7 +241,19 @@ http://127.0.0.1:5000/predict
 }
 ```
 
--- images
+![WhatsApp Image 2025-12-11 at 23 35 44](https://github.com/user-attachments/assets/2c62f5fe-1626-41bc-92e4-5d67211249f5)
+
+![WhatsApp Image 2025-12-11 at 23 43 37](https://github.com/user-attachments/assets/d1e73022-543c-47cb-8ad0-7ff344e4e2aa)
+
+![WhatsApp Image 2025-12-11 at 23 43 37 (1)](https://github.com/user-attachments/assets/5bad0c75-6b9d-47ed-8ad7-dfb214368419)
+
+![WhatsApp Image 2025-12-11 at 23 35 44 (2)](https://github.com/user-attachments/assets/264df126-9dc4-48db-b847-e4049e22e8ef)
+
+![WhatsApp Image 2025-12-11 at 23 35 44 (3)](https://github.com/user-attachments/assets/3d8cb88e-9382-4166-ab44-28a575a78d17)
+
+![WhatsApp Image 2025-12-11 at 23 35 44 (3)](https://github.com/user-attachments/assets/cd51a0a2-ff07-44e6-8a64-0867e84655a6)
+
+![WhatsApp Image 2025-12-11 at 23 35 44 (1)](https://github.com/user-attachments/assets/394e8972-c066-4627-8234-6a98b72630ae)
 
 ## How to Use the Application
 
